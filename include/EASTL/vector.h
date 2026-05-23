@@ -187,8 +187,8 @@ namespace eastl
 
 	}; // VectorBase
 
-
-
+	// #EASTL_CHANGE
+	enum loadFromStream_tag_type	{ loadFromStream_tag };
 
 	/// vector
 	///
@@ -236,6 +236,11 @@ namespace eastl
 		static_assert(!is_volatile<value_type>::value, "vector<T> value_type must be non-volatile.");
 
 	public:
+		// #EASTL_CHANGE - Add constructor that loads from a stream. Adding required tag to avoid the windows compiler from trying to use the wrong
+		// constructor.
+		template<class S>
+		vector(loadFromStream_tag_type, S & stream) { stream.template ReadContainer<value_type>(*this); }
+
 		vector() EA_NOEXCEPT_IF(EA_NOEXCEPT_EXPR(EASTL_VECTOR_DEFAULT_ALLOCATOR));
 		explicit vector(const allocator_type& allocator) EA_NOEXCEPT;
 		explicit vector(size_type n, const allocator_type& allocator = EASTL_VECTOR_DEFAULT_ALLOCATOR);
@@ -250,6 +255,14 @@ namespace eastl
 		// this constructor is equivalent to the constructor vector(static_cast<size_type>(first), static_cast<value_type>(last), allocator) if InputIterator is an integral type.
 		template <typename InputIterator>
 		vector(InputIterator first, InputIterator last, const allocator_type& allocator = EASTL_VECTOR_DEFAULT_ALLOCATOR);
+
+		// #EASTL_CHANGE - Added to support TContainerFixedMemory so we can pass fixed_vectors as vectors for ease of use.
+		template <class AlignedBuffer> vector(AlignedBuffer& buffer, size_t nodeCount, const allocator_type& allocator)
+			: base_type(allocator)
+		{
+			mpBegin = mpEnd = (value_type*)&buffer.buffer[0];
+			internalCapacityPtr() = mpBegin + nodeCount;
+		}
 
 	   ~vector();
 
