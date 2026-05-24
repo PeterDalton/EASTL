@@ -1581,6 +1581,8 @@ namespace eastl
 	template <typename T, typename Allocator>
 	inline void list<T, Allocator>::swap(this_type& x)
 	{
+		// #EASTL_CHANGE - Copying this logic from vector.h
+#if EASTL_VECTOR_LEGACY_SWAP_BEHAVIOUR_REQUIRES_COPY_CTOR
 		if(internalAllocator() == x.internalAllocator()) // If allocators are equivalent...
 			DoSwap(x);
 		else // else swap the contents.
@@ -1589,6 +1591,27 @@ namespace eastl
 			*this = x;                   // itself call this member swap function.
 			x     = temp;
 		}
+#else
+		// NOTE(rparolin): The previous implementation required T to be copy-constructible in the fall-back case where
+		// allocators with unique instances copied elements.  This was an unnecessary restriction and prevented the common
+		// usage of vector with non-copyable types (eg. eastl::vector<non_copyable> or eastl::vector<unique_ptr>). 
+		// 
+		// The previous implementation violated the following requirements of vector::swap so the fall-back code has
+		// been removed.  EASTL implicitly defines 'propagate_on_container_swap = false' therefore the fall-back case is
+		// undefined behaviour.  We simply swap the contents and the allocator as that is the common expectation of
+		// users and does not put the container into an invalid state since it can not free its memory via its current
+		// allocator instance.
+		//
+		// http://en.cppreference.com/w/cpp/container/vector/swap
+		// "Exchanges the contents of the container with those of other. Does not invoke any move, copy, or swap
+		// operations on individual elements."
+		//
+		// http://en.cppreference.com/w/cpp/concept/AllocatorAwareContainer
+		// "Swapping two containers with unequal allocators if propagate_on_container_swap is false is undefined
+		// behavior."
+
+		DoSwap(x);
+#endif
 	}
 
 

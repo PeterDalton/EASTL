@@ -21,6 +21,9 @@
 	#pragma once // Some compilers (e.g. VC++) benefit significantly from using this. We've measured 3-4% build speed improvements in apps as a result.
 #endif
 
+#ifndef CHANGE_EASTL_UNIQUE_PTR_ENABLE_DIRECTACCESS_OPERATOR // #EASTL_CHANGE
+#	define CHANGE_EASTL_UNIQUE_PTR_ENABLE_DIRECTACCESS_OPERATOR 1
+#endif
 
 namespace eastl
 {
@@ -294,6 +297,15 @@ namespace eastl
 			return mPair.second();
 		}
 
+#ifdef CHANGE_EASTL_UNIQUE_PTR_ENABLE_DIRECTACCESS_OPERATOR
+		// Added for ease of use, we understand the reasons for not adding this accessor however a lot of existing code
+		// depends upon it.  Evaluate as we go and whether or not we should get rid of this.
+		operator pointer () const EA_NOEXCEPT
+		{ 
+			return mPair.first();
+		}
+#endif
+
 		#ifdef EA_COMPILER_NO_EXPLICIT_CONVERSION_OPERATORS
 			/// Note that below we do not use operator bool(). The reason for this
 			/// is that booleans automatically convert up to short, int, float, etc.
@@ -483,6 +495,15 @@ namespace eastl
 		{
 			return mPair.second();
 		}
+
+#ifdef CHANGE_EASTL_UNIQUE_PTR_ENABLE_DIRECTACCESS_OPERATOR
+		// Added for ease of use, we understand the reasons for not adding this accessor however a lot of existing code
+		// depends upon it.  Evaluate as we go and whether or not we should get rid of this.
+		operator pointer () const EA_NOEXCEPT
+		{ 
+			return mPair.first();
+		}
+#endif
 
 		#ifdef EA_COMPILER_NO_EXPLICIT_CONVERSION_OPERATORS
 			typedef T* (this_type::*bool_)() const;
